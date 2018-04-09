@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# Wait for MME
+sleep 10
+
+# Check interface name for each network
+# Docker is assigning interface names at random
+TEMP_IP=$(ip addr show eth0 | grep 'inet ' | awk '{ print $2}')
+
+if [[ $TEMP_IP = *"172.10.30"* ]]; then
+  export IFACE_S1U="eth0"
+  export IP_S1U=$TEMP_IP
+elif [[ $TEMP_IP = *"172.10.11"* ]]; then
+  export IFACE_S11="eth0"
+  export IP_S11=$TEMP_IP
+else
+  export IFACE_SGI="eth0"
+fi
+
+TEMP_IP=$(ip addr show eth1 | grep 'inet ' | awk '{ print $2}')
+
+if [[ $TEMP_IP = *"172.10.30"* ]]; then
+  export IFACE_S1U="eth1"
+  export IP_S1U=$TEMP_IP
+elif [[ $TEMP_IP = *"172.10.11"* ]]; then
+  export IFACE_S11="eth1"
+  export IP_S11=$TEMP_IP
+else
+  export IFACE_SGI="eth1"
+fi
+
+TEMP_IP=$(ip addr show eth2 | grep 'inet ' | awk '{ print $2}')
+
+if [[ $TEMP_IP = *"172.10.30"* ]]; then
+  export IFACE_S1U="eth2"
+  export IP_S1U=$TEMP_IP
+elif [[ $TEMP_IP = *"172.10.11"* ]]; then
+  export IFACE_S11="eth2"
+  export IP_S11=$TEMP_IP
+else
+  export IFACE_SGI="eth2"
+fi
+
+# Create confog file from template
+envsubst < /home/config/spgw.conf > /usr/local/etc/oai/spgw.conf
+
+# Run S/P GW service
+/home/openair-cn/scripts/run_spgw
+status=$?
+if [ $status -ne 0 ]; then
+  echo "Failed to start spgw: $status"
+  exit $status
+fi
+

@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# Wait for HSS
+sleep 7
+
+# Get S6a and S11 addresses
+export HSS_IP=$(host hss | egrep -o "has address [0-9]+.+" | cut -d " " -f3)
+export SPGW_IP=$(host spgw | egrep -o "has address [0-9]+.+" | cut -d " " -f3)
+
+# Check interface names for each network
+# Docker is assigning interfaces at random
+TEMP_IP=$(ip addr show eth0 | grep 'inet ' | awk '{ print $2}')
+
+if [[ $TEMP_IP = *"172.10.20"* ]]; then
+  export IFACE_S1="eth0"
+  export IP_S1=$TEMP_IP
+elif [[ $TEMP_IP = *"172.10.11"* ]]; then
+  export IFACE_S11="eth0"
+  export IP_S11=$TEMP_IP
+fi
+
+TEMP_IP=$(ip addr show eth1 | grep 'inet ' | awk '{ print $2}')
+
+if [[ $TEMP_IP = *"172.10.20"* ]]; then
+  export IFACE_S1="eth1"
+  export IP_S1=$TEMP_IP
+elif [[ $TEMP_IP = *"172.10.11"* ]]; then
+  export IFACE_S11="eth1"
+  export IP_S11=$TEMP_IP
+fi
+
+TEMP_IP=$(ip addr show eth2 | grep 'inet ' | awk '{ print $2}')
+
+if [[ $TEMP_IP = *"172.10.20"* ]]; then
+  export IFACE_S1="eth2"
+  export IP_S1=$TEMP_IP
+elif [[ $TEMP_IP = *"172.10.11"* ]]; then
+  export IFACE_S11="eth2"
+  export IP_S11=$TEMP_IP
+fi
+
+# Create config files based on template
+envsubst < /home/config/mme.conf > /usr/local/etc/oai/mme.conf
+envsubst < /home/config/mme_fd.conf > /usr/local/etc/oai/freeDiameter/mme_fd.conf
+
+# Chceck MME certificate for Diameter S6a connection
+/home/openair-cn/scripts/check_mme_s6a_certificate /usr/local/etc/oai/freeDiameter $MME_HOST.$MME_REALM
+
+# Run MME service
+/home/openair-cn/scripts/run_mme
+status=$?
+if [ $status -ne 0 ]; then
+  echo "Failed to start mme: $status"
+  exit $status
+fi
+

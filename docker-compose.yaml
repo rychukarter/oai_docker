@@ -1,0 +1,98 @@
+version: '2'
+
+services:
+   hss:
+      image: rychukarter/oai_hss:2.1.0
+#      build: hss_docker
+      volumes:
+         - ./hss_docker/oai:/usr/local/etc/oai
+         - ./hss_docker/db/:/home/db/
+         - ./hss_docker/config:/home/config
+      environment:
+         - HSS_HOST=hss-waw
+         - HSS_REALM=openair4G.eur
+         - MYSQL_HOST=127.0.0.1
+         - MYSQL_USER=root
+         - MYSQL_USER_PASSWORD=oai-db
+         - MYSQL_DATABASE=oai_db
+         - MYSQL_ROOT_PASSWORD=oai-db
+      networks:
+         - S6a
+
+   mme:
+      image: rychukarter/oai_mme:2.1.0
+#      build: mme_docker
+      volumes:
+         - ./mme_docker/config:/home/config
+         - ./mme_docker/oai:/usr/local/etc/oai
+      environment:
+         - HSS_HOST=hss-waw
+         - HSS_REALM=openair4G.eur
+         - MME_HOST=mme-waw
+         - MME_REALM=openair4G.eur
+      networks:
+         - S1-MME
+         - S6a
+         - S11
+      depends_on:
+         - hss
+
+   spgw:
+      image: rychukarter/oai_spgw:2.1.0
+#      build: spgw_docker
+      privileged: true
+      cap_drop:
+         - ALL
+      volumes:
+         - ./spgw_docker/config:/home/config
+         - ./spgw_docker/oai:/usr/local/etc/oai
+         - /lib/modules:/lib/modules
+      environment:
+         - UE_ADDR_POOL=173.10.0.0/16
+         - PGW_MASQ_SGI=yes
+         - PGW_CLAMPING=no
+      networks:
+         - SGI
+         - S11
+         - S1-U
+      depends_on:
+         - hss
+         - mme
+
+networks:
+   S6a:
+      driver: bridge
+      ipam:
+         driver: default
+         config:
+            - subnet: 172.10.6.0/24
+              gateway: 172.10.6.254
+   S1-MME:
+      driver: bridge
+      ipam:
+         driver: default
+         config:
+            - subnet: 172.10.20.0/24
+              gateway: 172.10.20.254
+
+   S1-U:
+      driver: bridge
+      ipam:
+         driver: default
+         config:
+            - subnet: 172.10.30.0/24
+              gateway: 172.10.30.254
+   S11:
+      driver: bridge
+      ipam:
+         driver: default
+         config:
+            - subnet: 172.10.11.0/24
+              gateway: 172.10.11.254
+   SGI:
+      driver: bridge
+      ipam:
+         driver: default
+         config:
+            - subnet: 172.10.15.0/24
+              gateway: 172.10.15.254
