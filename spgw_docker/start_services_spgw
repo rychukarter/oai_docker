@@ -7,7 +7,7 @@ sleep 10
 # Docker is assigning interface names at random
 TEMP_IP=$(ip addr show eth0 | grep 'inet ' | awk '{ print $2}')
 
-if [[ $TEMP_IP = *"172.10.30"* ]]; then
+if [[ $TEMP_IP = *"192.168"* ]]; then
   export IFACE_S1U="eth0"
   export IP_S1U=$TEMP_IP
 elif [[ $TEMP_IP = *"172.10.11"* ]]; then
@@ -19,7 +19,7 @@ fi
 
 TEMP_IP=$(ip addr show eth1 | grep 'inet ' | awk '{ print $2}')
 
-if [[ $TEMP_IP = *"172.10.30"* ]]; then
+if [[ $TEMP_IP = *"192.168"* ]]; then
   export IFACE_S1U="eth1"
   export IP_S1U=$TEMP_IP
 elif [[ $TEMP_IP = *"172.10.11"* ]]; then
@@ -31,7 +31,7 @@ fi
 
 TEMP_IP=$(ip addr show eth2 | grep 'inet ' | awk '{ print $2}')
 
-if [[ $TEMP_IP = *"172.10.30"* ]]; then
+if [[ $TEMP_IP = *"192.168"* ]]; then
   export IFACE_S1U="eth2"
   export IP_S1U=$TEMP_IP
 elif [[ $TEMP_IP = *"172.10.11"* ]]; then

@@ -30,6 +30,8 @@ services:
          - HSS_REALM=openair4G.eur
          - MME_HOST=mme-waw
          - MME_REALM=openair4G.eur
+      ports:
+         - "36412:36412/sctp"
       networks:
          - S1-MME
          - S6a
@@ -38,7 +40,7 @@ services:
          - hss
 
    spgw:
-      image: rychukarter/oai_spgw:2.1.0
+      image: rychukarter/oai_spgw:2.1.1
 #      build: spgw_docker
       privileged: true
       cap_drop:
@@ -51,6 +53,10 @@ services:
          - UE_ADDR_POOL=173.10.0.0/16
          - PGW_MASQ_SGI=yes
          - PGW_CLAMPING=no
+      ports:
+         - "2152:2152/tcp"
+         - "2152:2152/udp"
+         - "2152:2152/sctp"
       networks:
          - SGI
          - S11
@@ -76,12 +82,14 @@ networks:
               gateway: 172.10.20.254
 
    S1-U:
-      driver: bridge
+      driver: macvlan
+      driver_opts:
+         parent: enp0s31f6
       ipam:
          driver: default
          config:
-            - subnet: 172.10.30.0/24
-              gateway: 172.10.30.254
+            - subnet: 192.168.7.0/24
+              gateway: 192.168.7.1
    S11:
       driver: bridge
       ipam:
