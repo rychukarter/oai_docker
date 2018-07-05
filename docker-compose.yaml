@@ -1,9 +1,22 @@
 version: '2'
 
 services:
+   mysql:
+      image: mysql:5.7.22
+      volumes:
+         - ./mysql_docker/data/:/var/lib/mysql/
+         - ./mysql_docker/db/oai_db.sql:/docker-entrypoint-initdb.d/oai_db.sql
+      environment:
+         - MYSQL_ROOT_PASSWORD=oai-db
+         - MYSQL_USER=oai-db
+         - MYSQL_DATABASE=oai_db
+         - MYSQL_PASSWORD=oai-db
+      networks:
+         - HssDb
+
    hss:
-      image: rychukarter/oai_hss:2.1.0
-#      build: hss_docker
+      image: rychukarter/oai_hss:3.0.1
+#      command: sleep 9000
       volumes:
          - ./hss_docker/oai:/usr/local/etc/oai
          - ./hss_docker/db/:/home/db/
@@ -11,17 +24,15 @@ services:
       environment:
          - HSS_HOST=hss-waw
          - HSS_REALM=openair4G.eur
-         - MYSQL_HOST=127.0.0.1
-         - MYSQL_USER=root
+         - MYSQL_USER=oai-db
          - MYSQL_USER_PASSWORD=oai-db
          - MYSQL_DATABASE=oai_db
-         - MYSQL_ROOT_PASSWORD=oai-db
       networks:
          - S6a
+         - HssDb
 
    mme:
       image: rychukarter/oai_mme:2.1.0
-#      build: mme_docker
       volumes:
          - ./mme_docker/config:/home/config
          - ./mme_docker/oai:/usr/local/etc/oai
@@ -41,7 +52,6 @@ services:
 
    spgw:
       image: rychukarter/oai_spgw:2.1.1
-#      build: spgw_docker
       privileged: true
       cap_drop:
          - ALL
@@ -104,3 +114,11 @@ networks:
          config:
             - subnet: 172.10.15.0/24
               gateway: 172.10.15.254
+   HssDb:
+      driver: bridge
+      ipam:
+         driver: default
+         config:
+            - subnet: 172.8.0.0/24
+              gateway: 172.8.0.254
+
