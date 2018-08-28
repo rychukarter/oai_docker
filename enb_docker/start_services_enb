@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Wait for MME
+# sleep 10
+
+# Get MME and SPGW IPs
+export MME_IP=$(nslookup $MME_HOST | egrep -o "Address: [0-9]+.+" | cut -d " " -f2)
+export IP_S1=$(ip addr show $IFACE_S1 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
+export IP_S1U=$(ip addr show $IFACE_S1U | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
+
+# Create config files based on template
+envsubst < /home/config/enb.band7.generic.oaisim.local_mme.conf > /home/openairinterface5g/targets/PROJECTS/GENERIC-LTE-EPC/CONF/enb.band7.generic.oaisim.local_mme.conf
+
+# Prevent sys/socket bind() fail
+cat /etc/hosts > /tmp/hosts && sed '/::1/d' /tmp/hosts > /etc/hosts && rm /tmp/hosts
+# Run MME service
+/home/openairinterface5g/cmake_targets/tools/run_enb_ue_virt_s1
+status=$?
+if [ $status -ne 0 ]; then
+  echo "Failed to start eNB: $status"
+  exit $status
+fi

@@ -3,41 +3,11 @@
 # Wait for HSS
 sleep 7
 
-# Get S6a and S11 addresses
-export HSS_IP=$(host hss | egrep -o "has address [0-9]+.+" | cut -d " " -f3)
-export SPGW_IP=$(host spgw | egrep -o "has address [0-9]+.+" | cut -d " " -f3)
-
-# Check interface names for each network
-# Docker is assigning interfaces at random
-TEMP_IP=$(ip addr show eth0 | grep 'inet ' | awk '{ print $2}')
-
-if [[ $TEMP_IP = *"172.10.20"* ]]; then
-  export IFACE_S1="eth0"
-  export IP_S1=$TEMP_IP
-elif [[ $TEMP_IP = *"172.10.11"* ]]; then
-  export IFACE_S11="eth0"
-  export IP_S11=$TEMP_IP
-fi
-
-TEMP_IP=$(ip addr show eth1 | grep 'inet ' | awk '{ print $2}')
-
-if [[ $TEMP_IP = *"172.10.20"* ]]; then
-  export IFACE_S1="eth1"
-  export IP_S1=$TEMP_IP
-elif [[ $TEMP_IP = *"172.10.11"* ]]; then
-  export IFACE_S11="eth1"
-  export IP_S11=$TEMP_IP
-fi
-
-TEMP_IP=$(ip addr show eth2 | grep 'inet ' | awk '{ print $2}')
-
-if [[ $TEMP_IP = *"172.10.20"* ]]; then
-  export IFACE_S1="eth2"
-  export IP_S1=$TEMP_IP
-elif [[ $TEMP_IP = *"172.10.11"* ]]; then
-  export IFACE_S11="eth2"
-  export IP_S11=$TEMP_IP
-fi
+# Get HSS and SPGW IPs
+export HSS_IP=$(host $HSS_HOST | egrep -o "has address [0-9]+.+" | cut -d " " -f3)
+export SPGW_IP=$(host $SPGW_HOST | egrep -o "has address [0-9]+.+" | cut -d " " -f3)
+export IP_S11=$(ip addr show $IFACE_S11 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
+export IP_S1=$(ip addr show $IFACE_S1 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
 
 # Create config files based on template
 envsubst < /home/config/mme.conf > /usr/local/etc/oai/mme.conf
@@ -53,4 +23,3 @@ if [ $status -ne 0 ]; then
   echo "Failed to start mme: $status"
   exit $status
 fi
-

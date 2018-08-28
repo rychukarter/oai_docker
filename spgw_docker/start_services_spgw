@@ -1,45 +1,8 @@
 #!/bin/bash
 
-# Wait for MME
-sleep 10
-
-# Check interface name for each network
-# Docker is assigning interface names at random
-TEMP_IP=$(ip addr show eth0 | grep 'inet ' | awk '{ print $2}')
-
-if [[ $TEMP_IP = *"192.168"* ]]; then
-  export IFACE_S1U="eth0"
-  export IP_S1U=$TEMP_IP
-elif [[ $TEMP_IP = *"172.10.11"* ]]; then
-  export IFACE_S11="eth0"
-  export IP_S11=$TEMP_IP
-else
-  export IFACE_SGI="eth0"
-fi
-
-TEMP_IP=$(ip addr show eth1 | grep 'inet ' | awk '{ print $2}')
-
-if [[ $TEMP_IP = *"192.168"* ]]; then
-  export IFACE_S1U="eth1"
-  export IP_S1U=$TEMP_IP
-elif [[ $TEMP_IP = *"172.10.11"* ]]; then
-  export IFACE_S11="eth1"
-  export IP_S11=$TEMP_IP
-else
-  export IFACE_SGI="eth1"
-fi
-
-TEMP_IP=$(ip addr show eth2 | grep 'inet ' | awk '{ print $2}')
-
-if [[ $TEMP_IP = *"192.168"* ]]; then
-  export IFACE_S1U="eth2"
-  export IP_S1U=$TEMP_IP
-elif [[ $TEMP_IP = *"172.10.11"* ]]; then
-  export IFACE_S11="eth2"
-  export IP_S11=$TEMP_IP
-else
-  export IFACE_SGI="eth2"
-fi
+# Get IPs
+export IP_S11=$(ip addr show $IFACE_S11 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
+export IP_S1U=$(ip addr show $IFACE_S1U | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
 
 # Create confog file from template
 envsubst < /home/config/spgw.conf > /usr/local/etc/oai/spgw.conf
